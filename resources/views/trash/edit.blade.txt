@@ -1,0 +1,269 @@
+@extends('layouts.main.app')
+
+@section('package', 'active')
+
+@section('add-style')
+
+<!-- summernote -->
+<link rel="stylesheet" href="{{ asset('assets/plugins/summernote/summernote-bs4.min.css') }}">
+
+@endsection
+
+@section('main-content')
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Packages - Edit {{$package->name}}</h1>
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Packages</li>
+                        <li class="breadcrumb-item active">Edit</li>
+                    </ol>
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            {{-- Show Error --}}
+            @include('partials.error')
+            {{-- Show Status --}}
+            @include('partials.alert')
+            <form action="{{ route('package.update',$package) }}" method="post" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="">Package Name</label>
+                                <input type="text" class="form-control" name="packageName" placeholder="Goa Bomb"
+                                    value="{{$package->name}}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="">Price (INR)</label>
+                                <input type="text" class="form-control" name="packagePrice" placeholder="99.99"
+                                    value="{{$package->price}}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="">Duration</label>
+                                <input type="text" class="form-control" name="packageDuration"
+                                    placeholder="Days / Nights" value="{{$package->duration}}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="">Description</label>
+                                <textarea class="form-control" name="packageDescription" rows="6"
+                                    placeholder="Write Package Description">{{$package->description}}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-switch custom-switch-off custom-switch-on-success">
+                                    <input type="checkbox" class="custom-control-input" id="customSwitch3"
+                                        name="packageActive" @if ($package->active)
+                                    checked
+                                    @endif
+                                    >
+                                    <label class="custom-control-label" for="customSwitch3">Is Package Active ?</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="exampleInputFile">Package Image - 1</label>
+                                <div class="input-group">
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="imageInput"
+                                            name="packageImage">
+                                        <label class="custom-file-label" for="imageInput" id="imageInputLabel">Choose
+                                            file</label>
+                                    </div>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-danger"
+                                            onclick="ResetImageInput('imageInput')"><i
+                                                class="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- itineraries table --}}
+
+                            <label for="">Itineraries</label>
+                            <br>
+                            <table class="itinerary-from">
+                                <tbody>
+
+                                    @if ($package->itineraries)
+                                    @foreach ($package->itineraries as $index => $itinerary)
+                                    <label for="">itinerary-{{$loop->index + 1}}</label>
+                                    <tr class="itinerary-{{$loop->index + 1}}" data-entry-id="{{ $itinerary->id }}">
+                                        <div class="form-group">
+
+                                            <div class="row">
+                                                <div class="col-2">
+                                                    <input type="number" class="form-control" readonly placeholder="id"
+                                                        name="packageItineraries[{{$index}}][id]"
+                                                        value="{{$itinerary->id}}">
+                                                </div>
+                                            </div>
+
+                                            <br>
+
+                                            <div class="row">
+                                                <div class="col-2">
+                                                    <input type="number" class="form-control" placeholder="Day"
+                                                        name="packageItineraries[{{$index}}][day]"
+                                                        value="{{$itinerary->day}}">
+                                                </div>
+                                                <div class="col">
+                                                    <input type="text" class="form-control" placeholder="Activity"
+                                                        name="packageItineraries[{{$index}}][title]"
+                                                        value="{{$itinerary->title}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="from-group">
+                                            <div class="row">
+                                                <div class="col-3">
+                                                    <input type="text" class="form-control" placeholder="Distance"
+                                                        name="packageItineraries[{{$index}}][distance]"
+                                                        value="{{$itinerary->distance}}">
+                                                </div>
+                                                <div class="col-3">
+                                                    <input type="text" class="form-control" placeholder="Time"
+                                                        name="packageItineraries[{{$index}}][time]"
+                                                        value="{{$itinerary->time}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group mt-3">
+                                            <textarea class="form-control"
+                                                name="packageItineraries[{{$index}}][description]" rows="5"
+                                                placeholder="Activity Overview">{{$itinerary->description}}</textarea>
+                                        </div>
+                                        <hr>
+                                    </tr>
+                                    @endforeach
+                                    @endif
+                                </tbody>
+
+                                <div class="form-group">
+                                    <a href="#" class="btn btn-secondary">Add itinerary</a>
+                                </div>
+
+                            </table>
+
+                            {{-- /itineraries Table --}}
+
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="">Includes In Package</label>
+                                <textarea id="summernote" name="packageIncludes">{{$package->includes}}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="">Execlude From Package</label>
+                                <textarea class="summernote" name="packageExcludes">{{$package->exclude}}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <div class="package-image-container">
+                                    <img id="packageImagePreview"
+                                        src="{{ ($package->image_path) ? asset( '/storage/'.$package->image_path ) : asset('/assets/images/placeholder.png') }}"
+                                        alt="" style="width: 100%; border-radius: .25rem; border: 2px solid #cdcdcd;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.row -->
+                <div class="card-body">
+                    <hr>
+                    <button type="submit" class="btn btn-warning">Update Package</button>
+                    <button type="reset" class="btn btn-secondary">Reset</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content -->
+</div>
+@endsection
+
+@section('add-script')
+
+<!-- Summernote -->
+<script src="{{ asset('assets/plugins/summernote/summernote-bs4.min.js') }}"></script>
+
+<!-- Page specific script -->
+<script>
+    $(function () {
+      // Summernote
+    
+    $tools = {
+        placeholder: 'Use List...!!!',
+        tabsize: 2,
+        height: 120,
+        toolbar: [
+          ['font', ['bold', 'underline']],
+          ['color', ['color']],
+          ['para', ['ul']],
+        ]
+      }
+    
+      $('.summernote').summernote($tools);
+      $('#summernote').summernote($tools);
+  
+    
+    })
+</script>
+
+<script>
+    const imageInput = document.querySelector('#imageInput'),
+            imageInputLabel = document.querySelector('#imageInputLabel'),
+            packageImagePreview = document.querySelector('#packageImagePreview');
+
+        function ResetImageInput(id) {
+
+            const InputFile =  document.getElementById(id);
+            InputFile.value = "";
+            imageInputLabel.innerHTML = "Choose file";
+            packageImagePreview.src = "http://127.0.0.1:8000/assets/images/placeholder.png";
+
+        }
+
+
+        function ImagePreviewLoader() {
+
+            console.log("ImagePreviewLoader Running...");
+
+            imageInput.addEventListener('change', (e) => {
+
+                // console.log(e);
+
+                let file = imageInput.files[0];
+
+                let reader = new FileReader();
+
+                reader.onloadend = (e) =>{
+                    // console.log(`Logging Reader Result ${reader.result}`);
+
+                    imageInputLabel.innerHTML = file.name;
+                    packageImagePreview.src = reader.result;
+                }
+
+                reader.readAsDataURL(file);
+            })
+        }
+
+        ImagePreviewLoader();
+</script>
+@endsection

@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateItinerariesTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('itineraries', function (Blueprint $table) {
+            $table->id();
+            $table->bigInteger('package_id')->unsigned();
+            $table->foreign('package_id')->references('id')->on('packages')->onDelete('cascade');
+            $table->integer('day');
+            $table->string('title');
+            $table->text('overview')->nullable();
+            $table->string('distance')->nullable();
+            $table->string('time')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('itineraries');
+    }
+}

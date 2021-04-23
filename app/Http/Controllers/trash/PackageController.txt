@@ -1,0 +1,251 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Category;
+use App\Models\Package;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class PackageController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+
+        // Package::withTrashed()->where('pkg_id', 'PKG284781')->restore(); //restore selected
+        // Package::withTrashed()->restore(); //restore all
+
+        return view('packages.index', [
+            'packages' => Package::all()
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        return view('packages.create', [
+            'categories' => Category::all()
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+
+
+        // Further Validations
+        // 'packageDuration' => ['required'],
+        // 'packageDescription' => ['required'],
+        // 'packageIncludes' => ['required'],
+        // 'packageExcludes' => ['required'],
+
+        // dd($request->all());
+
+        $request->validate([
+            'packageName' => ['required', 'unique:packages,name'],
+            'packagePrice' => ['nullable', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'packageImage' => ['file', 'mimes:jpg,png', 'max:1024'],
+        ]);
+
+
+        $package = new Package;
+
+        //package id
+        $package->pkg_id = "PKG" . rand(99999, 999999);
+
+        //name
+        $package->name = $request->packageName;
+
+        //Creating Slug And Save
+        $package->slug = Str::slug($request->packageName);
+
+        //price
+        $package->price = $request->packagePrice;
+        //Duration
+        $package->duration = $request->packageDuration;
+        //Description
+        $package->description = $request->packageDescription;
+        //includes
+        $package->includes = $request->packageIncludes;
+        //excludes
+        $package->excludes = $request->packageExcludes;
+
+        //is active
+        $package->active = ($request->packageActive) ? true : false;
+
+        if ($request->hasFile('packageImage')) {
+
+            $filename = time() . '.' . $request->packageImage->getClientOriginalExtension();
+
+            $imagePath = $request->packageImage->storeAs('packages_image', $filename, 'public');
+
+            $package->image_path = $imagePath;
+        }
+
+        // Save Package 
+
+        $package->save();
+
+        // Save Itineraries To DB
+
+        foreach ($request->packageItineraries as $packageItinerary) {
+            dump($packageItinerary);
+            // dd('STOP!!!');
+            $package->itineraries()->create($packageItinerary);
+        }
+
+        if ($package->exists) {
+
+            Session::flash('message', 'Package Created Successfuly!');
+            Session::flash('alert-class', 'alert-success');
+        } else {
+            Session::flash('message', 'Error Occured!!');
+            Session::flash('alert-class', 'alert-danger');
+        }
+
+        return redirect()->route('package.index');
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\package  $package
+     * @return \Illuminate\Http\Response
+     */
+    public function show(package $package)
+    {
+        return view('packages.show');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\package  $package
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(package $package)
+    {
+        return view('packages.edit', compact('package'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\package  $package
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, package $package)
+    {
+        dd($request->all());
+
+        $request->validate([
+            'packageName' => ['required'],
+            'packagePrice' => ['nullable', 'regex:/^\d+(\.\d{1,3})?$/'],
+            'packageImage' => ['file', 'mimes:jpg,png', 'max:1024']
+        ]);
+
+        //name
+        $package->name = $request->packageName;
+
+        //Creating Slug And Save
+        $package->slug = Str::slug($request->packageName);
+
+        //price
+        $package->price = $request->packagePrice;
+        //Duration
+        $package->duration = $request->packageDuration;
+        //Description
+        $package->description = $request->packageDescription;
+        //includes
+        $package->includes = $request->packageIncludes;
+        //excludes 
+        $package->excludes = $request->packageExcludes;
+
+        //is active
+        $package->active = ($request->packageActive) ? 1 : 0;
+
+        if ($request->hasFile('packageImage')) {
+
+            if ($package->image_path) {
+                Storage::delete('/public/' . $package->image_path);
+            }
+
+            $filename = time() . '.' . $request->packageImage->getClientOriginalExtension();
+
+            $imagePath = $request->packageImage->storeAs('packages_image', $filename, 'public');
+
+            $package->image_path = $imagePath;
+        }
+
+        // dd($package->isDirty('active'));
+
+        $isPackageDirty = $package->isDirty();
+
+        // dd($isPackageDirty);
+
+        // Save Package 
+        $package->save();
+
+
+        // Update Itineraries To DB
+
+        foreach ($request->packageItineraries as $packageItinerary) {
+            // dump($packageItinerary);
+            $temp = $package->itineraries()->where('id', $packageItinerary['id'])->update($packageItinerary);
+
+            // dump($temp);
+        }
+
+        // dd('STOP!!!');
+
+        if ($isPackageDirty) {
+
+            Session::flash('message', 'Package Updated Successfuly!');
+            Session::flash('alert-class', 'alert-warning');
+        } else {
+            Session::flash('message', 'No Changes Has Been Made!');
+        }
+
+        return redirect()->route('package.index');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\package  $package
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(package $package)
+    {
+
+        $result = $package->delete();
+
+        if ($result) {
+
+            Session::flash('message', 'Package Deleted Successfuly!');
+            Session::flash('alert-class', 'alert-success');
+        } else {
+            Session::flash('message', 'Error Occured While Deleting Package !!');
+            Session::flash('alert-class', 'alert-danger');
+        }
+
+        return redirect()->back();
+    }
+}
