@@ -40,6 +40,24 @@ Run "composer install" Genrate vendor folder
 composer install
 ```
 
+Remove .example form .env.example file
+
+```bash
+.env.example -> .env
+```
+
+Run "php artisan key:generate" APP_KEY
+
+```bash
+php artisan key:generate
+```
+
+Add ENV variable to your .env file
+
+```bash
+CLIENTSITE=https://yourclientsite.com
+```
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
